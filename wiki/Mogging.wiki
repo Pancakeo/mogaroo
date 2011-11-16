@@ -1,13 +1,11 @@
-#summary One-sentence summary of this page.
+#summary Hi!
 
-= Introduction =
+= An introduction might go here. =
 
-Add your content here.
+Total content!
 
 
 = Details =
 
-Add your content here.  Format your content with:
-  * Text in *bold* or _italic_
-  * Headings, paragraphs, and lists
-  * Automatic links to other wiki pages
+Oh man, formatting!
+*bold* move, Mr. _Raynor_
