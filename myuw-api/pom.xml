@@ -1,0 +1,15 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<parent>
+		<artifactId>mogarific</artifactId>
+		<groupId>org.mogaroo.poms</groupId>
+		<version>0.1-SNAPSHOT</version>
+		<relativePath>../poms/</relativePath>
+	</parent>
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>org.mogaroo.myuw.api</groupId>
+	<artifactId>myuw-api</artifactId>
+	<version>0.1-SNAPSHOT</version>
+	<name>MyUW API</name>
+	<description>An API for interacting with the MyUW web services.</description>
+</project>
