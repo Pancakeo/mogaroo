@@ -5,7 +5,7 @@ public class Department {
 	private String _departmentName;
 	private String _departmentAbbreviation;
 	
-	protected Department(String name, String abbv) {
+	public Department(String name, String abbv) {
 		_departmentName = name;
 		_departmentAbbreviation = abbv;
 	}

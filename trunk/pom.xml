@@ -12,5 +12,6 @@
 
   <modules>
     <module>myuw-api/</module>
+	<module>myuw-cli/</module>
   </modules>
 </project>

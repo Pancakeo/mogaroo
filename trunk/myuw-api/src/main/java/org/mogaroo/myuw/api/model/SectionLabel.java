@@ -4,7 +4,7 @@ public class SectionLabel {
 	
 	private String _label;
 	
-	protected SectionLabel(String label) {
+	public SectionLabel(String label) {
 		_label = label;
 	}
 	
