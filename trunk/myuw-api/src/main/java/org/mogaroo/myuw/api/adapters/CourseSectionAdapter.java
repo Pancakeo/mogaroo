@@ -14,6 +14,12 @@ public class CourseSectionAdapter extends DocumentAdapterBase<CourseSection> {
 
 	public CourseSection adapt(Document src) throws AdapterException {
 		try {
+			/*
+			 * TODO: Add processing of other fields here.
+			 * It should be possible to use other adapters by doing something like the following:
+			 * new CourseAdapter().adapt(evaluate("/Section/Course", src, XPathConstants.DOM_OBJECT_MODEL));
+			 * This will take the xml of a sub child (such as Course) and pass it to the CourseAdapter.
+			 */
 			int currentEnrollment = Integer.parseInt(evaluate("/Section/CurrentEnrollment", src));
 			int enrollmentLimit = Integer.parseInt(evaluate("/Section/LimitEstimateEnrollment", src));
 			return new CourseSection(null, null, null,
