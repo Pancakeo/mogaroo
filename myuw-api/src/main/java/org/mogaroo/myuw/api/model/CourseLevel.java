@@ -4,7 +4,7 @@ public class CourseLevel {
 	
 	private int _level;
 	
-	protected CourseLevel(int level) {
+	public CourseLevel(int level) {
 		_level = level;
 	}
 	

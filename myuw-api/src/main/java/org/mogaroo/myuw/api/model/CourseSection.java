@@ -2,7 +2,7 @@ package org.mogaroo.myuw.api.model;
 
 public class CourseSection {
 	
-	private Course _course;
+	private CourseIdentifier _courseId;
 	private SectionLabel _sectionLabel;
 	private SectionType _sectionType;
 	private Instructor _instructor;
@@ -11,10 +11,10 @@ public class CourseSection {
 	private int _currentEnrollment;
 	private int _enrollmentLimit;
 	
-	protected CourseSection(Course course, ScheduleLineNumber sln, SectionLabel label,
+	public CourseSection(CourseIdentifier courseId, ScheduleLineNumber sln, SectionLabel label,
 			SectionType type, Instructor instructor, CourseTimes times,
 			int currentEnrollment, int enrollmentLimit) {
-		_course = course;
+		_courseId = courseId;
 		_sln = sln;
 		_sectionLabel = label;
 		_sectionType = type;
@@ -24,8 +24,8 @@ public class CourseSection {
 		_enrollmentLimit = enrollmentLimit;
 	}
 	
-	public Course getCourse() {
-		return _course;
+	public CourseIdentifier getCourse() {
+		return _courseId;
 	}
 
 	public SectionLabel getSectionLabel() {
