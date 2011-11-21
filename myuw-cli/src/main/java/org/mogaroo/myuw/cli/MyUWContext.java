@@ -23,6 +23,10 @@ public class MyUWContext extends CLIContext {
 	private static final String DEFAULT_WEBLOGIN_HOST = "weblogin.washington.edu";
 	private static final String WEBLOGIN_HOST_KEY = "myuw_login_host";
 	
+	/** Registration has its own deal! **/
+	private static final String DEFAULT_REGISTER_HOST = "sdb.admin.washington.edu";
+	private static final String REGISTER_HOST_KEY = "myuw_register_page";
+	
 	/**
 	 * The MyUW service.
 	 */
@@ -36,7 +40,8 @@ public class MyUWContext extends CLIContext {
 		super(app);
 		_myUwService = new MyUWServiceImpl(
 				this.getString(STUDENT_WS_HOST_KEY, DEFAULT_WS_HOST),
-				this.getString(WEBLOGIN_HOST_KEY, DEFAULT_WEBLOGIN_HOST));
+				this.getString(WEBLOGIN_HOST_KEY, DEFAULT_WEBLOGIN_HOST),
+				this.getString(REGISTER_HOST_KEY, DEFAULT_REGISTER_HOST));
 	}
 	
 	public MyUWService getMyUWService() {

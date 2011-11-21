@@ -17,13 +17,14 @@ import org.mogaroo.myuw.api.model.SectionLabel;
 /** Integration tests. **/
 
 public class BasicIt {
-	private static final String DEFAULT_WS_HOST = "ws.admin.washington.edu";
-	private static final String DEFAULT_WEBLOGIN_HOST = "weblogin.washington.edu";
+	private static final String WS_HOST = "ws.admin.washington.edu";
+	private static final String WEBLOGIN_HOST = "weblogin.washington.edu";
+	private static final String REGISTER_HOST = "sdb.admin.washington.edu";
 	
 	@Test
 	// Note: This may need to be maintained each quarter.
 	public void testCourseFetch() throws MyUWServiceException {
-		MyUWService uwService = new MyUWServiceImpl(DEFAULT_WS_HOST, DEFAULT_WEBLOGIN_HOST);
+		MyUWService uwService = new MyUWServiceImpl(WS_HOST, WEBLOGIN_HOST, REGISTER_HOST);
 		CourseIdentifier courseId = new CourseIdentifier(
 				new Department(null, "MATH"), new CourseLevel(390));
 		SectionLabel label = new SectionLabel("A");
@@ -37,7 +38,7 @@ public class BasicIt {
 	@Test
 	// Auth should fail.
 	public void testAuthFailure() throws MyUWServiceException {
-		MyUWService uwService = new MyUWServiceImpl(DEFAULT_WS_HOST, DEFAULT_WEBLOGIN_HOST);
+		MyUWService uwService = new MyUWServiceImpl(WS_HOST, WEBLOGIN_HOST, REGISTER_HOST);
 		AuthenticationResult result = uwService.authenticate(new MyUWCredentials("egg", "mog"));
 		
 		assertNotNull("auth result is null.", result);
@@ -46,7 +47,7 @@ public class BasicIt {
 	
 	@Test
 	public void testRegFailure() throws MyUWServiceException {
-		MyUWService uwService = new MyUWServiceImpl(DEFAULT_WS_HOST, DEFAULT_WEBLOGIN_HOST);
+		MyUWService uwService = new MyUWServiceImpl(WS_HOST, WEBLOGIN_HOST, REGISTER_HOST);
 		RegistrationResult result = uwService.registerBySln(null, null);
 		
 		assertNotNull("Result is null", result);

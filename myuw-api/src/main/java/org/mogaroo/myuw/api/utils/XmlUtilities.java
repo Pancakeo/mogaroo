@@ -63,9 +63,7 @@ public class XmlUtilities {
         return nodes;
     }
 
-    /** Return document from string. 
-     * Note: Uses HtmlCleaner. 
-     * TODO: Consider separating HtmlCleaner implementation to another method. **/
+    /** Return document from string.  **/
     public static Document getDocumentFromString(String content) {
         try {
             DocumentBuilder db = DocumentBuilderFactory.newInstance().newDocumentBuilder();
