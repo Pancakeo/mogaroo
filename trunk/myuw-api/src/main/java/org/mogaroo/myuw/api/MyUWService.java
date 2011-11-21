@@ -84,4 +84,11 @@ public interface MyUWService {
 	 * @return The registration result.
 	 */
 	public RegistrationResult registerBySln(ScheduleLineNumber sln, Quarter quarter) throws MyUWServiceException;
+	
+	
+	/**
+	 * Retrieves the current list of courses the user is registered for.
+	 * @return List of courses the user is registered for.
+	 */
+	public List<ScheduleLineNumber> getRegisteredCourses() throws MyUWServiceException;
 }
