@@ -174,8 +174,7 @@ public class MyUWServiceImpl implements MyUWService {
 	public RegistrationResult registerBySln(ScheduleLineNumber sln, Quarter quarter) throws MyUWServiceException {
 		
 		if (_userCredentials == null) {
-			//return RegistrationResult.failure(FailureReason.USER_NOT_LOGGED_IN);
-			// TODO
+			return RegistrationResult.failure(FailureReason.USER_NOT_LOGGED_IN);
 		}
 		
 		// Quarter part might be tricky..
@@ -224,7 +223,7 @@ public class MyUWServiceImpl implements MyUWService {
 		GetMethod finalRequest = null;
 		
 		try {
-			doLoginRequest(_userCredentials, true);
+			//doLoginRequest(_userCredentials, true);
 			
 			if (_pubCookie != null) {
 				System.out.println("Setting cookie to " + _pubCookie);
