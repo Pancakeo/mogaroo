@@ -1,0 +1,16 @@
+#summary Project usage and details.
+
+= Hello World =
+
+Mogaroo is for UW students who are trying to get into a class. Mogaroo's purpose is to continuously check for openings. When an opening is found, Mogaroo tries to get your attention. At some point, Mogaroo might even register for you.
+
+
+= Details =
+
+Mogaroo is:
+* Usable
+* Friendly
+* Incomplete
+* Needy
+* Anorexic
+* Inlactose tolerant
