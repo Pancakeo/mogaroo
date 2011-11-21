@@ -25,7 +25,7 @@ public class AuthCommand extends Command<MyUWContext> {
 		Console.info("Authenticating user ["+_username+"]...");
 		AuthenticationResult result = null;
 		try {
-			context.getMyUWService().authenticate(new MyUWCredentials(_username, _password));
+			result = context.getMyUWService().authenticate(new MyUWCredentials(_username, _password));
 		}
 		catch (MyUWServiceException e) {
 			Console.error("Error communicating with the MyUW service: " + e.getMessage());
