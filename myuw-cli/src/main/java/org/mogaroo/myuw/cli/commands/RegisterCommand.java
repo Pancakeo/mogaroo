@@ -30,8 +30,7 @@ public class RegisterCommand extends Command<MyUWContext> {
 	protected CommandResult innerExecute(MyUWContext context) {
 		MyUWService uwService = context.getMyUWService();
 		
-		// TODO HEH!
-		if (true || uwService.isLoggedIn()) {
+		if (uwService.isLoggedIn()) {
 			Console.info("User is logged in.");
 			try {
 				
