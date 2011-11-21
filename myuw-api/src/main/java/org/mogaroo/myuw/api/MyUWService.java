@@ -32,6 +32,10 @@ public interface MyUWService {
 	 */
 	public AuthenticationResult login(MyUWCredentials credentials) throws MyUWServiceException;
 	
+	/** Verify that a user is logged in. This method should be called before registering. 
+	 * @return True if the user is logged in. **/
+	public boolean isLoggedIn();
+	
 	/**
 	 * Lookup a course by a course identifier.
 	 * @param courseId The course identifier.
@@ -79,5 +83,5 @@ public interface MyUWService {
 	 * @param sln The SLN of the course.
 	 * @return The registration result.
 	 */
-	public RegistrationResult register(ScheduleLineNumber sln, Quarter quarter) throws MyUWServiceException;
+	public RegistrationResult registerBySln(ScheduleLineNumber sln, Quarter quarter) throws MyUWServiceException;
 }

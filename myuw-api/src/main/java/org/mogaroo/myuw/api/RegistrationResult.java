@@ -31,6 +31,7 @@ public class RegistrationResult {
 		COURSE_NOT_FOUND,
 		PREREQS_NOT_SATISFIED,
 		CONFLICTED,
+		USER_NOT_LOGGED_IN,
 		UNKNOWN;
 	}
 }

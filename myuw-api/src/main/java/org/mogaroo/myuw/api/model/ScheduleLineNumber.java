@@ -4,7 +4,7 @@ public class ScheduleLineNumber {
 	
 	private int _slnValue;
 	
-	protected ScheduleLineNumber(int slnValue) {
+	public ScheduleLineNumber(int slnValue) {
 		_slnValue = slnValue;
 	}
 	
