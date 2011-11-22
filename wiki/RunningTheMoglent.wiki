@@ -1,6 +1,6 @@
 #summary Checking out, building, executing.
 
-= Pre-Rex =
+= Pre-Rex (Developer Guide) =
 
 Things you need:
 
