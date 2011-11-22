@@ -1,4 +1,4 @@
-#summary Brief instructions for executing the jar
+#summary Brief instructions for executing the jar. Intended for students and not-really-all-that-tech-savvy-people
 
 = Steps =
 
@@ -18,3 +18,6 @@ A few examples:
  # dropclass -q winter -y 2012 -sln 12345
 
 Eventually, a GUI might be made.  Just in time for Christmas.
+
+= Notes =
+# You need Java 1.6
