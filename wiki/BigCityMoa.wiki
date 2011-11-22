@@ -1,4 +1,4 @@
-#summary Project usage and details.
+#summary If you're me, then who the hell am I?!
 
 = Hello World =
 
