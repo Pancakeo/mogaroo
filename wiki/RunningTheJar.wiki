@@ -1,0 +1,20 @@
+#summary Brief instructions for executing the jar
+
+= Steps =
+
+Download a myuw-cli JAR from the Downloads page.
+ * Open a terminal window. (Windows users: Command Prompt)
+ * Navigate to the folder you put the JAR in.
+ * Execute: java -jar <jar name>
+ * You'll be prompted to enter various commands.
+
+Note: Most commands require you to login, which can be done using the login command.
+
+A few examples:
+ # monitorsection -d MATH -l 390 -s A -q winter -y 2012
+ # login -u george -p 1234
+ # register -q winter -y 2012 -sln 12345
+ # getcourses
+ # dropclass -q winter -y 2012 -sln 12345
+
+Eventually, a GUI might be made.  Just in time for Christmas.
