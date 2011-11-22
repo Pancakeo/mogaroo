@@ -1,4 +1,4 @@
-#summary Checking out, building, executing.
+#summary Checking out, building, executing... for developers
 
 = Pre-Rex (Developer Guide) =
 
