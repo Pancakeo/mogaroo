@@ -16,8 +16,8 @@ import com.ballew.tools.cli.api.annotations.CLICommand;
 import com.ballew.tools.cli.api.console.Console;
 import com.beust.jcommander.Parameter;
 
-@CLICommand(name="register", description="Registers for a class. Login must be called first.")
-public class RegisterCommand extends Command<MyUWContext> {
+@CLICommand(name="dropclass", description="Drops a class. Login must be called first.")
+public class DropClassCommand extends Command<MyUWContext> {
 	
 	@Parameter(names={"-sln", "--schedule-line-number"}, description="The username.", required=true)
 	private int _sln;
@@ -45,25 +45,30 @@ public class RegisterCommand extends Command<MyUWContext> {
 					return CommandResult.BAD_ARGS;
 				}
 				
-				Console.info("Checking to see if user is already enrolled in '" + _sln + "'...");
-				
+				Console.info("Checking to see if user is enrolled in '" + _sln + "'...");
 				List<ScheduleLineNumber> courseList = uwService.getRegisteredCourses();
 								
+				boolean foundMatch = false;
 				for (ScheduleLineNumber sln : courseList) {
 					if (sln.getValue() == _sln) {
-						Console.info("You're already registered for this class.");
-						return CommandResult.OK;
+						foundMatch = true;
+						break;
 					}
 				}
 				
-				RegistrationResult result = uwService.registerBySln(new ScheduleLineNumber(_sln), new Quarter(_year, season));
+				if (!foundMatch) {
+					Console.error("Not registered for class '" + _sln + "'.");
+					return CommandResult.BAD_ARGS;
+				}
+				
+				RegistrationResult result = uwService.dropBySln(new ScheduleLineNumber(_sln), new Quarter(_year, season));
 				
 				if (result.isSuccessful()) {
-					Console.info("Successfully registered for SLN # " + _sln + ".");
+					Console.info("Successfully dropped SLN # " + _sln + ".");
 					return CommandResult.OK;
 				}
 				else {
-					Console.error("Failed to register. Reason: " + result.getFailureReason());
+					Console.error("Failed to drop class. Reason: " + result.getFailureReason());
 					return CommandResult.ERROR;
 				}
 				
