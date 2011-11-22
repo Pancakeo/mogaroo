@@ -19,9 +19,20 @@ public class Quarter {
 	}
 
 	public enum Season {
-		FALL,
-		WINTER,
-		SPRING,
-		SUMMER
+		FALL (4),
+		WINTER (1),
+		SPRING (2),
+		SUMMER (3);
+		
+		private final int _value;
+		
+		// Give each season a numerical value. Used by registration form.
+		private Season(int val) {
+			_value = val;
+		}
+		
+		public int getSeasonNumber() {
+			return _value;
+		}
 	}
 }

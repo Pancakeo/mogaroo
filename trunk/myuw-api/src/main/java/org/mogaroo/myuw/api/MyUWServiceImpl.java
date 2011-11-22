@@ -56,7 +56,7 @@ public class MyUWServiceImpl implements MyUWService {
 	private String _studentWebServiceHost;
 	private String _webLoginHost;
 	private String _registrationHost;
-	
+
 	private HttpClient _httpClient;
 
 	/** User credentials. Stored on successful login. **/
@@ -64,7 +64,7 @@ public class MyUWServiceImpl implements MyUWService {
 
 	/** Pub cookie. Used for authentication. Updated whenever possible. **/
 	private String _pubCookie;
-	
+
 	/** Constructs the MyUW service.
 	 * @param studentWebServiceHost A REST api provided by the UW. Can be used for polling class info.
 	 * @param webLoginHost The more familiar web interface. Used for registration and login. 
@@ -188,27 +188,53 @@ public class MyUWServiceImpl implements MyUWService {
 			return RegistrationResult.failure(FailureReason.USER_NOT_LOGGED_IN);
 		}
 
-		throw new MyUWServiceException("This method isn't quite done yet.", new UnsupportedOperationException());
+		try {
+			doLoginRequest(_userCredentials, true);
+			return registerForClass(sln, quarter);
+		}
+		catch (Exception e) {
+			throw new MyUWServiceException("Register threw exception: " + e.getMessage(), e);
+		}
+	}
+
+	@Override
+	public RegistrationResult dropBySln(ScheduleLineNumber sln, Quarter quarter)
+	throws MyUWServiceException {
+
+		if (_userCredentials == null) {
+			return RegistrationResult.failure(FailureReason.USER_NOT_LOGGED_IN);
+		}
+
+		try {
+			doLoginRequest(_userCredentials, true);
+			return dropClass(sln, quarter);
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+			throw new MyUWServiceException("Register threw exception: " + e.getMessage(), e);
+		}
+
 	}
 
 	@Override
 	public List<ScheduleLineNumber> getRegisteredCourses() throws MyUWServiceException {
 		List<ScheduleLineNumber> courses = new ArrayList<ScheduleLineNumber>();
-		
+
 		if (_userCredentials == null) {
 			throw new IllegalStateException("User is not logged in.");
 		}
-		
+
 		try {
+			doLoginRequest(_userCredentials, true);
 			courses.addAll(fetchRegisteredCourses());
 		}
 		catch (Exception e) {
 			throw new MyUWServiceException("Problem fetching registered courses: " + e.getMessage(), e);
 		}
-		
+
 		return courses;
 	}
-	
+
 	private MyUWServiceResponse getWebServiceResponse(HttpMethod method) throws HttpException, IOException, SAXException, ParserConfigurationException {
 		int status = _httpClient.executeMethod(method);
 		InputStream responseStream = method.getResponseBodyAsStream();
@@ -222,12 +248,12 @@ public class MyUWServiceImpl implements MyUWService {
 			method.releaseConnection();
 		}
 	}
-	
+
 	// Returns a NVP array of items that match hidden form elements on the myUW pages.
 	private static NameValuePair[] getHiddenFormElements(Document doc) {
-    	List<NameValuePair> elements = new ArrayList<NameValuePair>();
-    	
-    	// Grab the hidden fields. These are also required for authentication.
+		List<NameValuePair> elements = new ArrayList<NameValuePair>();
+
+		// Grab the hidden fields. These are also required for authentication.
 		NodeList nodes = XmlUtilities.getNodes(doc, "//input[@type='hidden' and @name and @value]");
 
 		for (int i=0; i < nodes.getLength(); i++) {
@@ -237,10 +263,10 @@ public class MyUWServiceImpl implements MyUWService {
 
 			elements.add(new NameValuePair(name, value));
 		}
-		
+
 		// The parsing truly is a good time.
 		nodes = XmlUtilities.getNodes(doc, "//input[@type='HIDDEN' and @name and @value]");
-		
+
 		for (int i=0; i < nodes.getLength(); i++) {
 			Node n = nodes.item(i);	
 			String name = n.getAttributes().getNamedItem("name").getTextContent();
@@ -248,13 +274,13 @@ public class MyUWServiceImpl implements MyUWService {
 
 			elements.add(new NameValuePair(name, value));
 		}
-    	
-    	return elements.toArray(new NameValuePair[] {});
+
+		return elements.toArray(new NameValuePair[] {});
 	}
-	
+
 	// Logs into mogdub.
 	private AuthenticationResult doLoginRequest(MyUWCredentials credentials, boolean storeCookie)
-			throws HttpException, IOException, SAXException, ParserConfigurationException {
+	throws HttpException, IOException, SAXException, ParserConfigurationException {
 
 		GetMethod getLoginPageParamsMethod = new GetMethod(HTTPS + _webLoginHost);
 		PostMethod postLoginParamsMethod = new PostMethod(HTTPS + _webLoginHost);
@@ -269,13 +295,13 @@ public class MyUWServiceImpl implements MyUWService {
 
 				// Add username and password.
 				postLoginParamsMethod.addRequestHeader(USER_AGENT_KEY, USER_AGENT_VAL);
-				
+
 				postLoginParamsMethod.addParameter("user", credentials.getUsername());
 				postLoginParamsMethod.addParameter("pass", credentials.getPassword());
 				postLoginParamsMethod.addParameters(getHiddenFormElements(doc));
-				
+
 				int postResultCode = _httpClient.executeMethod(postLoginParamsMethod);
-				
+
 				// Validate login. String matching!
 				if (postResultCode == HttpStatus.SC_OK) {
 					String postResponseContent = IOUtils.toString(postLoginParamsMethod.getResponseBodyAsStream()); 
@@ -329,28 +355,124 @@ public class MyUWServiceImpl implements MyUWService {
 		}
 
 	}
-	
+
 	// Updates the public cookie.
 	private void updatePublicCookie(HttpMethod method) {
 		Header cookie = method.getResponseHeader(SET_COOKIE_KEY);
-		
+
 		if (cookie != null) {
 			_pubCookie = cookie.getValue();
 		}
 	}
 
 	// Fetches registered classes for a user.
-	private List<ScheduleLineNumber> fetchRegisteredCourses() throws HttpException, IOException {
+	private List<ScheduleLineNumber> fetchRegisteredCourses() throws HttpException, IOException, SAXException, ParserConfigurationException {
 		// /students/uwnetid/register.asp
 		List<ScheduleLineNumber> courses = new ArrayList<ScheduleLineNumber>();
-		
+
 		StringBuilder sb = new StringBuilder(HTTPS)
-							.append(_registrationHost)
-							.append("/students/")
-							.append("/uwnetid/")
-							.append("/register.asp");
-		
+		.append(_registrationHost)
+		.append("/students/")
+		.append("/uwnetid/")
+		.append("/register.asp");
+
 		HttpMethod method = new GetMethod(sb.toString());
+
+		try {
+
+			if (_pubCookie != null) {
+				method.setRequestHeader(COOKIE_KEY, _pubCookie);
+			}
+
+			method.setRequestHeader(USER_AGENT_KEY, USER_AGENT_VAL);
+
+			int resultCode = _httpClient.executeMethod(method);
+			String content = IOUtils.toString(method.getResponseBodyAsStream());
+			method.releaseConnection();
+
+			if (resultCode != HttpStatus.SC_OK) {
+				throw new HttpException("Initial step. Expected HTTP 200, but received: " + resultCode);
+			}
+			else {				
+				method = new PostMethod(HTTPS + _webLoginHost);
+				method.setRequestHeader(USER_AGENT_KEY, USER_AGENT_VAL);
+				method.setRequestHeader(COOKIE_KEY, _pubCookie);				
+				((PostMethod)method).addParameters(getHiddenFormElements(XmlUtilities.getDocumentFromDirtyString(content)));
+
+				resultCode = _httpClient.executeMethod(method);
+				content = IOUtils.toString(method.getResponseBodyAsStream());
+				updatePublicCookie(method);
+
+				method.releaseConnection();
+
+				if (resultCode != HttpStatus.SC_OK) {
+					throw new HttpException("Redirect step. Expected HTTP 200, but received: " + resultCode);
+				}
+				else {
+					Document doc = XmlUtilities.getDocumentFromDirtyString(content);
+					Node node = XmlUtilities.getNode(doc, "//form[@action]");
+					String actionUrl = XmlUtilities.getAttributeFromNode(node, "action");
+
+					method = new PostMethod(actionUrl);
+					method.setRequestHeader(USER_AGENT_KEY, USER_AGENT_VAL);
+					method.setRequestHeader(COOKIE_KEY, _pubCookie);
+					((PostMethod)method).addParameters(getHiddenFormElements(doc));
+
+					resultCode = _httpClient.executeMethod(method);
+					//IOUtils.toString(method.getResponseBodyAsStream());
+					updatePublicCookie(method);
+					Header location = method.getResponseHeader(LOCATION_KEY);
+					method.releaseConnection();
+
+					if (resultCode != HttpStatus.SC_MOVED_TEMPORARILY || location == null) {
+						throw new HttpException("Final auth step: Result code is not 302 or location header is null. "
+								+ "Result code: " + resultCode + ", location: " + location);
+					}
+					else {
+						method = new GetMethod(location.getValue()); 
+						method.setRequestHeader(COOKIE_KEY, _pubCookie);
+						method.setRequestHeader(USER_AGENT_KEY, USER_AGENT_VAL);
+
+						resultCode = _httpClient.executeMethod(method);
+						content = IOUtils.toString(method.getResponseBodyAsStream());
+						doc = XmlUtilities.getDocumentFromDirtyString(content);
+						method.releaseConnection();
+
+						if (resultCode != HttpStatus.SC_OK) {
+							throw new HttpException("Final registration page request did not return HTTP 200. "
+									+ "Result code: " + resultCode);
+						}
+
+						NameValuePair[] nvps = getHiddenFormElements(doc);
+
+						for (NameValuePair n : nvps) {
+							if (n.getName().matches("sln[0-9]+")) {
+								courses.add(new ScheduleLineNumber(Integer.parseInt(n.getValue())));
+							}
+						}
+
+					}
+				}
+			}
+		}
+
+		finally {
+			method.releaseConnection();
+		}
+
+		return courses;
+	}
+
+	private RegistrationResult registerForClass(ScheduleLineNumber sln, Quarter quarter) throws IOException {
+		// Note: Moved registration example POST key/value pairs to resources.
+		// /students/uwnetid/register.asp
+		StringBuilder registrationPage = new StringBuilder(HTTPS)
+		.append(_registrationHost)
+		.append("/students/")
+		.append("/uwnetid/")
+		.append("/register.asp");
+
+		HttpMethod method = new GetMethod(registrationPage.toString());
 
 		try {
 			if (_pubCookie != null) {
@@ -360,7 +482,7 @@ public class MyUWServiceImpl implements MyUWService {
 			int resultCode = _httpClient.executeMethod(method);
 			String content = IOUtils.toString(method.getResponseBodyAsStream());
 			method.releaseConnection();
-			
+
 			if (resultCode != HttpStatus.SC_OK) {
 				throw new HttpException("Initial step. Expected HTTP 200, but received: " + resultCode);
 			}
@@ -369,13 +491,13 @@ public class MyUWServiceImpl implements MyUWService {
 				method.setRequestHeader(USER_AGENT_KEY, USER_AGENT_VAL);
 				method.setRequestHeader(COOKIE_KEY, _pubCookie);				
 				((PostMethod)method).addParameters(getHiddenFormElements(XmlUtilities.getDocumentFromDirtyString(content)));
-				
+
 				resultCode = _httpClient.executeMethod(method);
 				content = IOUtils.toString(method.getResponseBodyAsStream());
 				updatePublicCookie(method);
-				
+
 				method.releaseConnection();
-				
+
 				if (resultCode != HttpStatus.SC_OK) {
 					throw new HttpException("Redirect step. Expected HTTP 200, but received: " + resultCode);
 				}
@@ -383,45 +505,67 @@ public class MyUWServiceImpl implements MyUWService {
 					Document doc = XmlUtilities.getDocumentFromDirtyString(content);
 					Node node = XmlUtilities.getNode(doc, "//form[@action]");
 					String actionUrl = XmlUtilities.getAttributeFromNode(node, "action");
-					
+
 					method = new PostMethod(actionUrl);
 					method.setRequestHeader(USER_AGENT_KEY, USER_AGENT_VAL);
 					method.setRequestHeader(COOKIE_KEY, _pubCookie);
 					((PostMethod)method).addParameters(getHiddenFormElements(doc));
-					
+
 					resultCode = _httpClient.executeMethod(method);
 					//IOUtils.toString(method.getResponseBodyAsStream());
 					updatePublicCookie(method);
 					Header location = method.getResponseHeader(LOCATION_KEY);
 					method.releaseConnection();
-					
+
 					if (resultCode != HttpStatus.SC_MOVED_TEMPORARILY || location == null) {
 						throw new HttpException("Final auth step: Result code is not 302 or location header is null. "
-									+ "Result code: " + resultCode + ", location: " + location);
+								+ "Result code: " + resultCode + ", location: " + location);
 					}
-					else {
-						method = new GetMethod(location.getValue()); 
+					else {						
+						method = new PostMethod(location.getValue()); 
 						method.setRequestHeader(COOKIE_KEY, _pubCookie);
 						method.setRequestHeader(USER_AGENT_KEY, USER_AGENT_VAL);
-		
+						((PostMethod)method).addParameters(getAddClassPostParams(sln, quarter));
+
 						resultCode = _httpClient.executeMethod(method);
 						content = IOUtils.toString(method.getResponseBodyAsStream());
 						doc = XmlUtilities.getDocumentFromDirtyString(content);
+						updatePublicCookie(method);
 						method.releaseConnection();
-						
+
 						if (resultCode != HttpStatus.SC_OK) {
-							throw new HttpException("Final registration page request did not return HTTP 200. "
-										+ "Result code: " + resultCode);
+							throw new HttpException("Add class registration page request did not return HTTP 200. "
+									+ "Result code: " + resultCode);
 						}
-						
-						NameValuePair[] nvps = getHiddenFormElements(doc);
-						
-						for (NameValuePair n : nvps) {
-							if (n.getName().matches("sln[0-9]+")) {
-								courses.add(new ScheduleLineNumber(Integer.parseInt(n.getValue())));
+						else {
+							method = new GetMethod(registrationPage.toString());
+							method.setRequestHeader(COOKIE_KEY, _pubCookie);
+							method.setRequestHeader(USER_AGENT_KEY, USER_AGENT_VAL);
+							resultCode = _httpClient.executeMethod(method);
+							content = IOUtils.toString(method.getResponseBodyAsStream());
+							doc = XmlUtilities.getDocumentFromDirtyString(content);
+							method.releaseConnection();
+
+							if (resultCode != HttpStatus.SC_OK) {
+								throw new HttpException("Fetch class registration page request did not return HTTP 200. "
+										+ "Result code: " + resultCode);
+							}
+							else {
+								// Fetch the student's classes. Verify the SLN number is among them.
+								NameValuePair[] nvps = getHiddenFormElements(doc);
+
+								for (NameValuePair n : nvps) {
+									if (n.getName().matches("sln[0-9]+")) {
+
+										if (n.getValue().equals(sln.getValue() + "")) {
+											return RegistrationResult.successful();
+										}
+									}
+
+								}
+
 							}
 						}
-						
 					}
 				}
 			}
@@ -430,13 +574,214 @@ public class MyUWServiceImpl implements MyUWService {
 		finally {
 			method.releaseConnection();
 		}
-		
-		return courses;
+
+		// TODO: Attempt to parse out failure reason.
+		return RegistrationResult.failure(FailureReason.UNKNOWN);
 	}
 
-	@SuppressWarnings("unused")
-	private RegistrationResult registerForClass(ScheduleLineNumber sln, Quarter quarter) {
+	private NameValuePair[] getAddClassPostParams(ScheduleLineNumber sln, Quarter quarter) {
+		List<NameValuePair> nvps = new ArrayList<NameValuePair>();
+
+		// General:
+		nvps.add(new NameValuePair("INPUTFORM", "UPDATE"));
+		nvps.add(new NameValuePair("YR", "" + quarter.getYear()));
+		nvps.add(new NameValuePair("QTR", "" + quarter.getSeason().getSeasonNumber()));
+
+		// Class we're adding:
+		nvps.add(new NameValuePair("action1", "A"));
+		nvps.add(new NameValuePair("entcode1", ""));
+		nvps.add(new NameValuePair("sln1", "" + sln.getValue()));
+		nvps.add(new NameValuePair("dup1", ""));
+		nvps.add(new NameValuePair("credits1", ""));
+
+		// Extra params. This basically tells the service we're just sending one class.
+		nvps.add(new NameValuePair("maxdrops", "0"));
+
+		return nvps.toArray(new NameValuePair[] {});
+	}
+
+	private RegistrationResult dropClass(ScheduleLineNumber sln, Quarter quarter) throws IOException {
 		// Note: Moved registration example POST key/value pairs to resources.
-		return RegistrationResult.failure(FailureReason.UNKNOWN);
+		// /students/uwnetid/register.asp
+		StringBuilder registrationPage = new StringBuilder(HTTPS)
+		.append(_registrationHost)
+		.append("/students/")
+		.append("/uwnetid/")
+		.append("/register.asp");
+
+		HttpMethod method = new GetMethod(registrationPage.toString());
+
+		try {
+			if (_pubCookie != null) {
+				method.setRequestHeader(COOKIE_KEY, _pubCookie);
+			}
+
+			int resultCode = _httpClient.executeMethod(method);
+			String content = IOUtils.toString(method.getResponseBodyAsStream());
+			method.releaseConnection();
+
+			if (resultCode != HttpStatus.SC_OK) {
+				throw new HttpException("Initial step. Expected HTTP 200, but received: " + resultCode);
+			}
+			else {				
+				method = new PostMethod(HTTPS + _webLoginHost);
+				method.setRequestHeader(USER_AGENT_KEY, USER_AGENT_VAL);
+				method.setRequestHeader(COOKIE_KEY, _pubCookie);				
+				((PostMethod)method).addParameters(getHiddenFormElements(XmlUtilities.getDocumentFromDirtyString(content)));
+
+				resultCode = _httpClient.executeMethod(method);
+				content = IOUtils.toString(method.getResponseBodyAsStream());
+				updatePublicCookie(method);
+
+				method.releaseConnection();
+
+				if (resultCode != HttpStatus.SC_OK) {
+					throw new HttpException("Redirect step. Expected HTTP 200, but received: " + resultCode);
+				}
+				else {
+					Document doc = XmlUtilities.getDocumentFromDirtyString(content);
+					Node node = XmlUtilities.getNode(doc, "//form[@action]");
+					String actionUrl = XmlUtilities.getAttributeFromNode(node, "action");
+
+					method = new PostMethod(actionUrl);
+					method.setRequestHeader(USER_AGENT_KEY, USER_AGENT_VAL);
+					method.setRequestHeader(COOKIE_KEY, _pubCookie);
+					((PostMethod)method).addParameters(getHiddenFormElements(doc));
+
+					resultCode = _httpClient.executeMethod(method);
+					//IOUtils.toString(method.getResponseBodyAsStream());
+					updatePublicCookie(method);
+					Header location = method.getResponseHeader(LOCATION_KEY);
+					method.releaseConnection();
+
+					if (resultCode != HttpStatus.SC_MOVED_TEMPORARILY || location == null) {
+						throw new HttpException("Final auth step: Result code is not 302 or location header is null. "
+								+ "Result code: " + resultCode + ", location: " + location);
+					}
+					else {					
+						// We need to view the page first, to determine the 'dup' value.
+						method = new GetMethod(location.getValue());
+						method.setRequestHeader(COOKIE_KEY, _pubCookie);
+						method.setRequestHeader(USER_AGENT_KEY, USER_AGENT_VAL);
+						resultCode = _httpClient.executeMethod(method);
+						content = IOUtils.toString(method.getResponseBodyAsStream());
+						doc = XmlUtilities.getDocumentFromDirtyString(content);
+						updatePublicCookie(method);
+						method.releaseConnection();
+
+						if (resultCode != HttpStatus.SC_OK) {
+							throw new HttpException("Get 'dup' step: Result code is not 200."
+									+ "Result code: " + resultCode);
+						}
+						else {
+							// Attempt to grab 'dup' value for class. Get the sln node.
+							node = XmlUtilities.getNode(doc, "//input[@type='HIDDEN' and @value='" + sln.getValue() + "']");
+							String index = XmlUtilities.getAttributeFromNode(node, "name").replace("sln", "");
+							
+							// Get the dup node
+							node = XmlUtilities.getNode(doc, "//input[@type='HIDDEN' and @name='dup" + index + "']");
+							String dupValue = XmlUtilities.getAttributeFromNode(node, "value");
+							
+							method = new PostMethod(registrationPage.toString()); 
+							method.setRequestHeader(COOKIE_KEY, _pubCookie);
+							method.setRequestHeader(USER_AGENT_KEY, USER_AGENT_VAL);
+							((PostMethod)method).addParameters(getDropClassParams(sln, quarter, dupValue));
+
+							resultCode = _httpClient.executeMethod(method);
+							content = IOUtils.toString(method.getResponseBodyAsStream());
+							doc = XmlUtilities.getDocumentFromDirtyString(content);
+							updatePublicCookie(method);
+							method.releaseConnection();
+
+							if (resultCode != HttpStatus.SC_OK) {
+								throw new HttpException("Add class registration page request did not return HTTP 200. "
+										+ "Result code: " + resultCode);
+							}
+							else {
+								method = new GetMethod(registrationPage.toString());
+								method.setRequestHeader(COOKIE_KEY, _pubCookie);
+								method.setRequestHeader(USER_AGENT_KEY, USER_AGENT_VAL);
+								resultCode = _httpClient.executeMethod(method);
+								content = IOUtils.toString(method.getResponseBodyAsStream());
+								doc = XmlUtilities.getDocumentFromDirtyString(content);
+								method.releaseConnection();
+
+								if (resultCode != HttpStatus.SC_OK) {
+									throw new HttpException("Fetch class registration page request did not return HTTP 200. "
+											+ "Result code: " + resultCode);
+								}
+								else {
+									// Fetch the student's classes. Verify the SLN number is among them.
+									NameValuePair[] nvps = getHiddenFormElements(doc);
+
+									boolean foundCourse = false;
+									for (NameValuePair n : nvps) {
+										if (n.getName().matches("sln[0-9]+")) {	
+
+											if (n.getValue().equals(sln.getValue() + "")) {
+												foundCourse = true;
+											}
+										}
+
+									}
+
+									if (!foundCourse) {
+										return RegistrationResult.successful();
+									}
+									else {
+										return RegistrationResult.failure(FailureReason.UNKNOWN);
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+
+		finally {
+			method.releaseConnection();
+		}
+
+	}
+
+
+	private NameValuePair[] getDropClassParams(ScheduleLineNumber sln, Quarter quarter, String dupValue) {
+		List<NameValuePair> nvps = new ArrayList<NameValuePair>();
+
+		// General:
+		nvps.add(new NameValuePair("INPUTFORM", "UPDATE"));
+		nvps.add(new NameValuePair("YR", "" + quarter.getYear()));
+		nvps.add(new NameValuePair("QTR", "" + quarter.getSeason().getSeasonNumber()));
+
+		// Class we're dropping:
+		nvps.add(new NameValuePair("action1", "D"));
+		nvps.add(new NameValuePair("entcode1", ""));
+		nvps.add(new NameValuePair("sln1", "" + sln.getValue()));
+		nvps.add(new NameValuePair("dup1", dupValue));
+		nvps.add(new NameValuePair("credits1", ""));
+		//nvps.add(new NameValuePair("gr_sys1", "decnochange"));
+
+		// Extra params. This basically tells the service we're just sending one class.
+		nvps.add(new NameValuePair("maxdrops", "1"));
+		//nvps.add(new NameValuePair("maxadds", "0"));
+
+		/*
+		INPUTFORM=UPDATE&YR=2012&QTR=1
+		&action1=D&entcode1=&sln1=13255&dup1=B&credits1=&gr_sys1=decnochange
+		&entcode2=&sln2=15679&dup2=&credits2=&gr_sys2=decnochange
+		&entcode3=&sln3=15685&dup3=A&credits3=&gr_sys3=decnochange
+		&entcode4=&sln4=12358&dup4=&credits4=&gr_sys4=decnochange
+		&action5=A&sln5=&entcode5=&credits5=&dup5=+
+		&action6=A&sln6=&entcode6=&credits6=&dup6=+
+		&action7=A&sln7=&entcode7=&credits7=&dup7=+
+		&action8=A&sln8=&entcode8=&credits8=&dup8=+
+		&action9=A&sln9=&entcode9=&credits9=&dup9=+
+		&action10=A&sln10=&entcode10=&credits10=&dup10=+
+		&action11=A&sln11=&entcode11=&credits11=&dup11=+
+		&action12=A&sln12=&entcode12=&credits12=&dup12=+&maxdrops=4&maxadds=8
+		 */
+
+		return nvps.toArray(new NameValuePair[] {});
 	}
 }

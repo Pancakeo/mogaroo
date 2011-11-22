@@ -85,6 +85,8 @@ public interface MyUWService {
 	 */
 	public RegistrationResult registerBySln(ScheduleLineNumber sln, Quarter quarter) throws MyUWServiceException;
 	
+	/** Drops the specified course. **/
+	public RegistrationResult dropBySln(ScheduleLineNumber sln, Quarter quarter) throws MyUWServiceException;
 	
 	/**
 	 * Retrieves the current list of courses the user is registered for.
