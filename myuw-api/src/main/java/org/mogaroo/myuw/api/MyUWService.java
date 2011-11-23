@@ -1,6 +1,7 @@
 package org.mogaroo.myuw.api;
 
 import java.util.List;
+import java.util.Set;
 
 import org.mogaroo.myuw.api.model.Course;
 import org.mogaroo.myuw.api.model.CourseIdentifier;
@@ -72,6 +73,15 @@ public interface MyUWService {
 	public List<CourseSection> getSections(CourseIdentifier courseId, Quarter quarter) throws MyUWServiceException;
 	
 	/**
+	 * Register the logged in user for the given courses.
+	 * @param courseSections The course sections to register for.
+	 * @param quarter The quarter to register for.
+	 * @return The registration result.
+	 * @throws MyUWServiceException
+	 */
+	public RegistrationResult registerCourses(Set<CourseSection> courseSections, Quarter quarter) throws MyUWServiceException;
+	
+	/**
 	 * Register the logged in user for the given course.
 	 * @param courseSection The course section to register for.
 	 * @return The registration result.
@@ -84,6 +94,15 @@ public interface MyUWService {
 	 * @return The registration result.
 	 */
 	public RegistrationResult registerBySln(ScheduleLineNumber sln, Quarter quarter) throws MyUWServiceException;
+	
+	/**
+	 * Register the logged in user for the given courses.
+	 * @param slns The courses to register for.
+	 * @param quarter The quarter to register for.
+	 * @return The registration result.
+	 * @throws MyUWServiceException
+	 */
+	public RegistrationResult registerBySlns(Set<ScheduleLineNumber> slns, Quarter quarter) throws MyUWServiceException;
 	
 	/** Drops the specified course. **/
 	public RegistrationResult dropBySln(ScheduleLineNumber sln, Quarter quarter) throws MyUWServiceException;

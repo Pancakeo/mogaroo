@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -180,6 +181,14 @@ public class MyUWServiceImpl implements MyUWService {
 
 		return registerBySln(courseSection.getSln(), quarter);
 	}
+	
+	@Override
+	public RegistrationResult registerCourses(
+			Set<CourseSection> courseSections, Quarter quarter)
+			throws MyUWServiceException {
+		// TODO:
+		throw new RuntimeException("Method not yet implemented.");
+	}
 
 	@Override
 	public RegistrationResult registerBySln(ScheduleLineNumber sln, Quarter quarter) throws MyUWServiceException {
@@ -195,6 +204,13 @@ public class MyUWServiceImpl implements MyUWService {
 		catch (Exception e) {
 			throw new MyUWServiceException("Register threw exception: " + e.getMessage(), e);
 		}
+	}
+	
+	@Override
+	public RegistrationResult registerBySlns(Set<ScheduleLineNumber> slns,
+			Quarter quarter) throws MyUWServiceException {
+		// TODO:
+		throw new RuntimeException("Method not yet implemented.");
 	}
 
 	@Override
