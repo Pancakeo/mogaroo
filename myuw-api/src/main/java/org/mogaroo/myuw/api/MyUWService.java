@@ -15,6 +15,7 @@ import org.mogaroo.myuw.api.model.SectionLabel;
  * @author Sean
  *
  */
+
 public interface MyUWService {
 	
 	/**
@@ -53,7 +54,7 @@ public interface MyUWService {
 	public CourseSection getCourseSection(CourseIdentifier courseId, SectionLabel label, Quarter quarter) throws MyUWServiceException;
 	
 	/**
-	 * Get a list of courses within a department.
+	 * Get a set of courses within a department.
 	 * @param deptartment The department to search.
 	 * @return The list of courses. May not be null, but may be empty.
 	 */
@@ -104,12 +105,25 @@ public interface MyUWService {
 	 */
 	public RegistrationResult registerBySlns(Set<ScheduleLineNumber> slns, Quarter quarter) throws MyUWServiceException;
 	
-	/** Drops the specified course. **/
+	/** Drops the specified course. 
+	 * @param sln The course to drop.
+	 * @param quarter Quarter to drop from.
+	 * @return The registration result.
+	 * @throws MyUWServiceException **/
 	public RegistrationResult dropBySln(ScheduleLineNumber sln, Quarter quarter) throws MyUWServiceException;
+	
+	/** Drops the specified courses. 
+	 * @param slns The courses to drop.
+	 * @param quarter Quarter to drop from.
+	 * @return The registration result.
+	 * @throws MyUWServiceException **/
+	public RegistrationResult dropBySlns(Set<ScheduleLineNumber> slns, Quarter quarter) throws MyUWServiceException;
 	
 	/**
 	 * Retrieves the current list of courses the user is registered for.
-	 * @return List of courses the user is registered for.
+	 * @param quarter Context for lookup.
+	 * @return set of courses the user is registered for. May be empty, but never null.
+	 * @throws MyUWServiceException
 	 */
-	public List<ScheduleLineNumber> getRegisteredCourses() throws MyUWServiceException;
+	public Set<ScheduleLineNumber> getRegisteredCourses(Quarter quarter) throws MyUWServiceException;
 }

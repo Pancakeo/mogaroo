@@ -1,6 +1,8 @@
 package org.mogaroo.myuw.cli.commands;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.mogaroo.myuw.api.MyUWService;
 import org.mogaroo.myuw.api.MyUWServiceException;
@@ -19,8 +21,8 @@ import com.beust.jcommander.Parameter;
 @CLICommand(name="register", description="Registers for a class. Login must be called first.")
 public class RegisterCommand extends Command<MyUWContext> {
 	
-	@Parameter(names={"-sln", "--schedule-line-number"}, description="The username.", required=true)
-	private int _sln;
+	@Parameter(names={"-sln", "--schedule-line-number"}, description="SLN number(s).", required=true)
+	private List<String> _slnInputList;
 	
 	@Parameter(names={"-q", "--quarter"}, description="The quarter name (fall/winter/spring/summer.", required=true)
 	private String _quarterName;
@@ -45,21 +47,32 @@ public class RegisterCommand extends Command<MyUWContext> {
 					return CommandResult.BAD_ARGS;
 				}
 				
-				Console.info("Checking to see if user is already enrolled in '" + _sln + "'...");
+				Set<ScheduleLineNumber> slns = new HashSet<ScheduleLineNumber>();
+				for (String s : _slnInputList) {
+					slns.add(new ScheduleLineNumber(Integer.parseInt(s)));
+				}
 				
-				List<ScheduleLineNumber> courseList = uwService.getRegisteredCourses();
-								
-				for (ScheduleLineNumber sln : courseList) {
-					if (sln.getValue() == _sln) {
-						Console.info("You're already registered for this class.");
-						return CommandResult.OK;
+				Quarter quarter = new Quarter(_year, season);
+				
+				Console.info("Checking to see if user is already enrolled in SLN number(s): " + slns + "...");
+				Set<ScheduleLineNumber> courses = uwService.getRegisteredCourses(quarter);
+												
+				boolean alreadyReged = false;
+				for (ScheduleLineNumber sln : courses) {
+					if (slns.contains(sln)) {
+						Console.error("You're already registered for class " + sln.getValue());
+						alreadyReged = true;
 					}
 				}
 				
-				RegistrationResult result = uwService.registerBySln(new ScheduleLineNumber(_sln), new Quarter(_year, season));
+				if (alreadyReged) {
+					return CommandResult.ERROR;
+				}
+								
+				RegistrationResult result = uwService.registerBySlns(slns, quarter);
 				
 				if (result.isSuccessful()) {
-					Console.info("Successfully registered for SLN # " + _sln + ".");
+					Console.info("Successfully registered for SLN numbers: " + slns + ".");
 					return CommandResult.OK;
 				}
 				else {
