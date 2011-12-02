@@ -6,7 +6,7 @@ Things you need:
 
 Maven (Tested on 2.2.1)
 
-Subversion (Tested with command line svn)
+Subversion (Tested with command line svn, tortoise svn)
 
 Java (Tested on 1.6)
 
@@ -24,14 +24,14 @@ Next, do some Mavening.  'mvn eclipse:eclipse' for all projects.
 
 Five! Import into Eclipse.  Add 'cli-api' as a required project for Mogaroo.
 
-Zenly, see these notes if you want to run myuw-cli: http://code.google.com/p/java-cli-api/wiki/RunningInEclipse
+Zenly, see these notes if you want to run myuw-cli in Eclipse: http://code.google.com/p/java-cli-api/wiki/RunningInEclipse
 
-And finally, once you start using myuw-cli you can run some commands and stuff.  Monitorclasses is probably the sought after one.
+And finally, once you start using myuw-cli you can run some commands and stuff.  Monitorclasses is probably the sought after one. (Maybe autoregister now)
 
 = Notes =
-
-Mogaroo is a GUI implementation. It hasn't been updated in awhile.
 
 myuw-api is the driving horse.
 
 myuw-cli is a command line rider for the driving horse.
+
+myuw-gui is an empty folder.
