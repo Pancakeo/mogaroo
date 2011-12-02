@@ -1,4 +1,4 @@
-#summary Don't get burned
+#summary How many is too many?
 
 = Limit =
 
