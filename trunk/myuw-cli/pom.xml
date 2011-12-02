@@ -4,7 +4,7 @@
 	<parent>
 		<artifactId>mogarific</artifactId>
 		<groupId>org.mogaroo.poms</groupId>
-		<version>0.1-SNAPSHOT</version>
+		<version>0.2-SNAPSHOT</version>
 		<relativePath>../poms/mogarific/</relativePath>
 	</parent>
 	<groupId>org.mogaroo.myuw.cli</groupId>
