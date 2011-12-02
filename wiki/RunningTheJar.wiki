@@ -14,8 +14,8 @@ A few examples:
  # monitorsection -d MATH -l 390 -s A -q winter -y 2012
  # login -u george -p 1234
  # register -q winter -y 2012 -sln 12345
- # getcourses
- # dropclass -q winter -y 2012 -sln 12345
+ # getcourses -q winter -y 2012
+ # drop -q winter -y 2012 -sln 12345
 
 Eventually, a GUI might be made.  Just in time for Christmas.
 
