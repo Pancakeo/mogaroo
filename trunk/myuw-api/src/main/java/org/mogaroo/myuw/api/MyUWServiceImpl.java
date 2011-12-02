@@ -3,7 +3,10 @@ package org.mogaroo.myuw.api;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -121,8 +124,8 @@ public class MyUWServiceImpl implements MyUWService {
 
 	@Override
 	public Course getCourse(CourseIdentifier courseId, Quarter quarter) throws MyUWServiceException {
-		// TODO Auto-generated method stub
-		return null;
+		// TODO
+		throw new RuntimeException("Method not supported.");
 	}
 
 	@Override
@@ -156,20 +159,20 @@ public class MyUWServiceImpl implements MyUWService {
 
 	@Override
 	public List<Course> getCourses(Department deptartment, Quarter quarter) throws MyUWServiceException {
-		// TODO Auto-generated method stub
-		return null;
+		// TODO
+		throw new RuntimeException("Method not supported.");
 	}
 
 	@Override
 	public List<Department> getDepartments() throws MyUWServiceException {
-		// TODO Auto-generated method stub
-		return null;
+		// TODO
+		throw new RuntimeException("Method not supported.");
 	}
 
 	@Override
 	public List<CourseSection> getSections(CourseIdentifier courseId, Quarter quarter) throws MyUWServiceException {
-		// TODO Auto-generated method stub
-		return null;
+		// TODO
+		throw new RuntimeException("Method not supported.");
 	}
 
 	@Override
@@ -186,55 +189,67 @@ public class MyUWServiceImpl implements MyUWService {
 	public RegistrationResult registerCourses(
 			Set<CourseSection> courseSections, Quarter quarter)
 			throws MyUWServiceException {
-		// TODO:
-		throw new RuntimeException("Method not yet implemented.");
+		
+		// TODO
+		throw new RuntimeException("Method not supported.");
 	}
 
 	@Override
 	public RegistrationResult registerBySln(ScheduleLineNumber sln, Quarter quarter) throws MyUWServiceException {
-
+		Set<ScheduleLineNumber> slns = new HashSet<ScheduleLineNumber>();
+		slns.add(sln);
+		return registerBySlns(slns, quarter);
+	}
+	
+	@Override
+	public RegistrationResult registerBySlns(Set<ScheduleLineNumber> slns,
+			Quarter quarter) throws MyUWServiceException {
+		
 		if (_userCredentials == null) {
 			return RegistrationResult.failure(FailureReason.USER_NOT_LOGGED_IN);
 		}
 
 		try {
 			doLoginRequest(_userCredentials, true);
-			return registerForClass(sln, quarter);
+			return registerForClasses(slns, quarter);
 		}
 		catch (Exception e) {
 			throw new MyUWServiceException("Register threw exception: " + e.getMessage(), e);
 		}
-	}
-	
-	@Override
-	public RegistrationResult registerBySlns(Set<ScheduleLineNumber> slns,
-			Quarter quarter) throws MyUWServiceException {
-		// TODO:
-		throw new RuntimeException("Method not yet implemented.");
 	}
 
 	@Override
 	public RegistrationResult dropBySln(ScheduleLineNumber sln, Quarter quarter)
 	throws MyUWServiceException {
 
+		Set<ScheduleLineNumber> slns = new HashSet<ScheduleLineNumber>();
+		slns.add(sln);
+		
+		return dropBySlns(slns, quarter);
+	}
+	
+	@Override
+	public RegistrationResult dropBySlns(Set<ScheduleLineNumber> slns,
+			Quarter quarter) throws MyUWServiceException {
+
 		if (_userCredentials == null) {
 			return RegistrationResult.failure(FailureReason.USER_NOT_LOGGED_IN);
 		}
 
 		try {
 			doLoginRequest(_userCredentials, true);
-			return dropClass(sln, quarter);
+			return dropClasses(slns, quarter);
 		}
 		catch (Exception e) {
 			e.printStackTrace();
-			throw new MyUWServiceException("Register threw exception: " + e.getMessage(), e);
+			throw new MyUWServiceException("Drop threw exception: " + e.getMessage(), e);
 		}
 
 	}
 
 	@Override
-	public List<ScheduleLineNumber> getRegisteredCourses() throws MyUWServiceException {
-		List<ScheduleLineNumber> courses = new ArrayList<ScheduleLineNumber>();
+	public Set<ScheduleLineNumber> getRegisteredCourses(Quarter quarter) throws MyUWServiceException {
+		Set<ScheduleLineNumber> courses = new HashSet<ScheduleLineNumber>();
 
 		if (_userCredentials == null) {
 			throw new IllegalStateException("User is not logged in.");
@@ -242,7 +257,7 @@ public class MyUWServiceImpl implements MyUWService {
 
 		try {
 			doLoginRequest(_userCredentials, true);
-			courses.addAll(fetchRegisteredCourses());
+			courses.addAll(fetchRegisteredCourses(quarter));
 		}
 		catch (Exception e) {
 			throw new MyUWServiceException("Problem fetching registered courses: " + e.getMessage(), e);
@@ -382,9 +397,9 @@ public class MyUWServiceImpl implements MyUWService {
 	}
 
 	// Fetches registered classes for a user.
-	private List<ScheduleLineNumber> fetchRegisteredCourses() throws HttpException, IOException, SAXException, ParserConfigurationException {
+	private Set<ScheduleLineNumber> fetchRegisteredCourses(Quarter quarter) throws HttpException, IOException, SAXException, ParserConfigurationException {
 		// /students/uwnetid/register.asp
-		List<ScheduleLineNumber> courses = new ArrayList<ScheduleLineNumber>();
+		Set<ScheduleLineNumber> courses = new HashSet<ScheduleLineNumber>();
 
 		StringBuilder sb = new StringBuilder(HTTPS)
 		.append(_registrationHost)
@@ -445,7 +460,11 @@ public class MyUWServiceImpl implements MyUWService {
 								+ "Result code: " + resultCode + ", location: " + location);
 					}
 					else {
-						method = new GetMethod(location.getValue()); 
+						method = new PostMethod(location.getValue()); 
+						// Set quarter context
+						String qtrInfo = "" + quarter.getSeason().getSeasonNumber() + quarter.getYear();
+						((PostMethod)method).addParameter(new NameValuePair("QYYYY", qtrInfo));
+						((PostMethod)method).addParameter(new NameValuePair("INPUTFORM", "QTRCHG"));
 						method.setRequestHeader(COOKIE_KEY, _pubCookie);
 						method.setRequestHeader(USER_AGENT_KEY, USER_AGENT_VAL);
 
@@ -458,12 +477,19 @@ public class MyUWServiceImpl implements MyUWService {
 							throw new HttpException("Final registration page request did not return HTTP 200. "
 									+ "Result code: " + resultCode);
 						}
+						
+						// The 'Display Textbooks' link on the registration page has all the SLN the user is registered for.
+						Node n = XmlUtilities.getNode(doc, "//a[contains(text(), 'Display Textbooks')]");
+						String hrefLink = XmlUtilities.getAttributeFromNode(n, "href");
+						
+						String[] parts = hrefLink.split("&");
 
-						NameValuePair[] nvps = getHiddenFormElements(doc);
-
-						for (NameValuePair n : nvps) {
-							if (n.getName().matches("sln[0-9]+")) {
-								courses.add(new ScheduleLineNumber(Integer.parseInt(n.getValue())));
+						for (String part : parts) {
+							Pattern p = Pattern.compile(".*sln[0-9]=([0-9]+).*", Pattern.CASE_INSENSITIVE);
+							Matcher m = p.matcher(part);
+																										
+							if (m.matches() && m.groupCount() == 1) {
+								courses.add(new ScheduleLineNumber(Integer.parseInt(m.group(1))));
 							}
 						}
 
@@ -479,7 +505,7 @@ public class MyUWServiceImpl implements MyUWService {
 		return courses;
 	}
 
-	private RegistrationResult registerForClass(ScheduleLineNumber sln, Quarter quarter) throws IOException {
+	private RegistrationResult registerForClasses(Set<ScheduleLineNumber> slns, Quarter quarter) throws IOException, MyUWServiceException {
 		// Note: Moved registration example POST key/value pairs to resources.
 		// /students/uwnetid/register.asp
 		StringBuilder registrationPage = new StringBuilder(HTTPS)
@@ -541,7 +567,7 @@ public class MyUWServiceImpl implements MyUWService {
 						method = new PostMethod(location.getValue()); 
 						method.setRequestHeader(COOKIE_KEY, _pubCookie);
 						method.setRequestHeader(USER_AGENT_KEY, USER_AGENT_VAL);
-						((PostMethod)method).addParameters(getAddClassPostParams(sln, quarter));
+						((PostMethod)method).addParameters(getAddClassPostParams(slns, quarter));
 
 						resultCode = _httpClient.executeMethod(method);
 						content = IOUtils.toString(method.getResponseBodyAsStream());
@@ -567,19 +593,11 @@ public class MyUWServiceImpl implements MyUWService {
 										+ "Result code: " + resultCode);
 							}
 							else {
-								// Fetch the student's classes. Verify the SLN number is among them.
-								NameValuePair[] nvps = getHiddenFormElements(doc);
-
-								for (NameValuePair n : nvps) {
-									if (n.getName().matches("sln[0-9]+")) {
-
-										if (n.getValue().equals(sln.getValue() + "")) {
-											return RegistrationResult.successful();
-										}
-									}
-
+								// Fetch the student's classes. Verify the SLN numbers are among them.
+								Set<ScheduleLineNumber> courses = getRegisteredCourses(quarter);
+								if (courses.containsAll(slns)) {
+									return RegistrationResult.successful();
 								}
-
 							}
 						}
 					}
@@ -595,7 +613,7 @@ public class MyUWServiceImpl implements MyUWService {
 		return RegistrationResult.failure(FailureReason.UNKNOWN);
 	}
 
-	private NameValuePair[] getAddClassPostParams(ScheduleLineNumber sln, Quarter quarter) {
+	private NameValuePair[] getAddClassPostParams(Set<ScheduleLineNumber> slns, Quarter quarter) {
 		List<NameValuePair> nvps = new ArrayList<NameValuePair>();
 
 		// General:
@@ -604,19 +622,23 @@ public class MyUWServiceImpl implements MyUWService {
 		nvps.add(new NameValuePair("QTR", "" + quarter.getSeason().getSeasonNumber()));
 
 		// Class we're adding:
-		nvps.add(new NameValuePair("action1", "A"));
-		nvps.add(new NameValuePair("entcode1", ""));
-		nvps.add(new NameValuePair("sln1", "" + sln.getValue()));
-		nvps.add(new NameValuePair("dup1", ""));
-		nvps.add(new NameValuePair("credits1", ""));
+		int i = 1;
+		for (ScheduleLineNumber s : slns) {
+			nvps.add(new NameValuePair("action" + i, "A"));
+			nvps.add(new NameValuePair("entcode" + i, ""));
+			nvps.add(new NameValuePair("sln" + i, "" + s.getValue()));
+			nvps.add(new NameValuePair("dup" + i, ""));
+			nvps.add(new NameValuePair("credits" + i, ""));
+			i++;
+		}
 
-		// Extra params. This basically tells the service we're just sending one class.
+		// Extra params. This basically tells the service we're just sending classes. (0 worked for 1 class...)
 		nvps.add(new NameValuePair("maxdrops", "0"));
 
 		return nvps.toArray(new NameValuePair[] {});
 	}
 
-	private RegistrationResult dropClass(ScheduleLineNumber sln, Quarter quarter) throws IOException {
+	private RegistrationResult dropClasses(Set<ScheduleLineNumber> slns, Quarter quarter) throws IOException, MyUWServiceException {
 		// Note: Moved registration example POST key/value pairs to resources.
 		// /students/uwnetid/register.asp
 		StringBuilder registrationPage = new StringBuilder(HTTPS)
@@ -690,18 +712,24 @@ public class MyUWServiceImpl implements MyUWService {
 									+ "Result code: " + resultCode);
 						}
 						else {
-							// Attempt to grab 'dup' value for class. Get the sln node.
-							node = XmlUtilities.getNode(doc, "//input[@type='HIDDEN' and @value='" + sln.getValue() + "']");
-							String index = XmlUtilities.getAttributeFromNode(node, "name").replace("sln", "");
+							Map<ScheduleLineNumber, String> dupValues = new HashMap<ScheduleLineNumber, String>();
 							
-							// Get the dup node
-							node = XmlUtilities.getNode(doc, "//input[@type='HIDDEN' and @name='dup" + index + "']");
-							String dupValue = XmlUtilities.getAttributeFromNode(node, "value");
+							// Attempt to grab 'dup' value for each class.
+							for (ScheduleLineNumber s : slns) {
+								node = XmlUtilities.getNode(doc, "//input[@type='HIDDEN' and @value='" + s.getValue() + "']");
+								String index = XmlUtilities.getAttributeFromNode(node, "name").replace("sln", "");
+								
+								// Get the dup node
+								node = XmlUtilities.getNode(doc, "//input[@type='HIDDEN' and @name='dup" + index + "']");
+								String dupValue = XmlUtilities.getAttributeFromNode(node, "value");
+								dupValues.put(s, dupValue);
+								
+								method = new PostMethod(registrationPage.toString()); 
+								method.setRequestHeader(COOKIE_KEY, _pubCookie);
+								method.setRequestHeader(USER_AGENT_KEY, USER_AGENT_VAL);
+							}
 							
-							method = new PostMethod(registrationPage.toString()); 
-							method.setRequestHeader(COOKIE_KEY, _pubCookie);
-							method.setRequestHeader(USER_AGENT_KEY, USER_AGENT_VAL);
-							((PostMethod)method).addParameters(getDropClassParams(sln, quarter, dupValue));
+							((PostMethod)method).addParameters(getDropClassParams(slns, quarter, dupValues));
 
 							resultCode = _httpClient.executeMethod(method);
 							content = IOUtils.toString(method.getResponseBodyAsStream());
@@ -727,21 +755,18 @@ public class MyUWServiceImpl implements MyUWService {
 											+ "Result code: " + resultCode);
 								}
 								else {
-									// Fetch the student's classes. Verify the SLN number is among them.
-									NameValuePair[] nvps = getHiddenFormElements(doc);
-
-									boolean foundCourse = false;
-									for (NameValuePair n : nvps) {
-										if (n.getName().matches("sln[0-9]+")) {	
-
-											if (n.getValue().equals(sln.getValue() + "")) {
-												foundCourse = true;
-											}
+									Set<ScheduleLineNumber> courses = getRegisteredCourses(quarter);
+									System.out.println(courses);
+									
+									boolean allCoursesDropped = true;
+									for (ScheduleLineNumber s : slns) {
+										if (courses.contains(s)) {
+											allCoursesDropped = false;
+											break;
 										}
-
 									}
-
-									if (!foundCourse) {
+									
+									if (allCoursesDropped) {
 										return RegistrationResult.successful();
 									}
 									else {
@@ -761,8 +786,8 @@ public class MyUWServiceImpl implements MyUWService {
 
 	}
 
-
-	private NameValuePair[] getDropClassParams(ScheduleLineNumber sln, Quarter quarter, String dupValue) {
+	private NameValuePair[] getDropClassParams(Set<ScheduleLineNumber> slns, Quarter quarter, 
+					Map<ScheduleLineNumber, String> dupValues) {
 		List<NameValuePair> nvps = new ArrayList<NameValuePair>();
 
 		// General:
@@ -770,34 +795,21 @@ public class MyUWServiceImpl implements MyUWService {
 		nvps.add(new NameValuePair("YR", "" + quarter.getYear()));
 		nvps.add(new NameValuePair("QTR", "" + quarter.getSeason().getSeasonNumber()));
 
-		// Class we're dropping:
-		nvps.add(new NameValuePair("action1", "D"));
-		nvps.add(new NameValuePair("entcode1", ""));
-		nvps.add(new NameValuePair("sln1", "" + sln.getValue()));
-		nvps.add(new NameValuePair("dup1", dupValue));
-		nvps.add(new NameValuePair("credits1", ""));
-		//nvps.add(new NameValuePair("gr_sys1", "decnochange"));
+		// Classes we're dropping:
+		int i = 1;
+		for (ScheduleLineNumber s : slns) {
+			nvps.add(new NameValuePair("action" + i, "D"));
+			nvps.add(new NameValuePair("entcode" + i, ""));
+			nvps.add(new NameValuePair("sln" + i, "" + s.getValue()));
+			nvps.add(new NameValuePair("dup" + i, dupValues.get(s)));
+			nvps.add(new NameValuePair("credits" + i, ""));
+			i++;
+		}
 
-		// Extra params. This basically tells the service we're just sending one class.
-		nvps.add(new NameValuePair("maxdrops", "1"));
-		//nvps.add(new NameValuePair("maxadds", "0"));
-
-		/*
-		INPUTFORM=UPDATE&YR=2012&QTR=1
-		&action1=D&entcode1=&sln1=13255&dup1=B&credits1=&gr_sys1=decnochange
-		&entcode2=&sln2=15679&dup2=&credits2=&gr_sys2=decnochange
-		&entcode3=&sln3=15685&dup3=A&credits3=&gr_sys3=decnochange
-		&entcode4=&sln4=12358&dup4=&credits4=&gr_sys4=decnochange
-		&action5=A&sln5=&entcode5=&credits5=&dup5=+
-		&action6=A&sln6=&entcode6=&credits6=&dup6=+
-		&action7=A&sln7=&entcode7=&credits7=&dup7=+
-		&action8=A&sln8=&entcode8=&credits8=&dup8=+
-		&action9=A&sln9=&entcode9=&credits9=&dup9=+
-		&action10=A&sln10=&entcode10=&credits10=&dup10=+
-		&action11=A&sln11=&entcode11=&credits11=&dup11=+
-		&action12=A&sln12=&entcode12=&credits12=&dup12=+&maxdrops=4&maxadds=8
-		 */
+		// Extra params. This basically tells the service we're sending .size() classes.
+		nvps.add(new NameValuePair("maxdrops", slns.size() + ""));
 
 		return nvps.toArray(new NameValuePair[] {});
 	}
+	
 }

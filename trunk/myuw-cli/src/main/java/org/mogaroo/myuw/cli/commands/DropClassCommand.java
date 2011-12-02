@@ -1,6 +1,8 @@
 package org.mogaroo.myuw.cli.commands;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.mogaroo.myuw.api.MyUWService;
 import org.mogaroo.myuw.api.MyUWServiceException;
@@ -16,11 +18,11 @@ import com.ballew.tools.cli.api.annotations.CLICommand;
 import com.ballew.tools.cli.api.console.Console;
 import com.beust.jcommander.Parameter;
 
-@CLICommand(name="dropclass", description="Drops a class. Login must be called first.")
+@CLICommand(name="drop", description="Drops a class. Login must be called first.")
 public class DropClassCommand extends Command<MyUWContext> {
 	
-	@Parameter(names={"-sln", "--schedule-line-number"}, description="The username.", required=true)
-	private int _sln;
+	@Parameter(names={"-sln", "--schedule-line-number"}, description="SLN number(s).", required=true)
+	private List<String> _slnInputList;
 	
 	@Parameter(names={"-q", "--quarter"}, description="The quarter name (fall/winter/spring/summer.", required=true)
 	private String _quarterName;
@@ -45,30 +47,29 @@ public class DropClassCommand extends Command<MyUWContext> {
 					return CommandResult.BAD_ARGS;
 				}
 				
-				Console.info("Checking to see if user is enrolled in '" + _sln + "'...");
-				List<ScheduleLineNumber> courseList = uwService.getRegisteredCourses();
-								
-				boolean foundMatch = false;
-				for (ScheduleLineNumber sln : courseList) {
-					if (sln.getValue() == _sln) {
-						foundMatch = true;
-						break;
-					}
+				Set<ScheduleLineNumber> slns = new HashSet<ScheduleLineNumber>();
+				for (String s : _slnInputList) {
+					slns.add(new ScheduleLineNumber(Integer.parseInt(s)));
 				}
 				
-				if (!foundMatch) {
-					Console.error("Not registered for class '" + _sln + "'.");
+				Quarter quarter = new Quarter(_year, season);
+				
+				Console.info("Checking to see if user is enrolled in SLN numbers " + slns + "...");
+				Set<ScheduleLineNumber> courses = uwService.getRegisteredCourses(quarter);
+								
+				if (!courses.containsAll(slns)) {
+					Console.error("Not registered for at least one class in " + slns + ". Registered for: " + courses);
 					return CommandResult.BAD_ARGS;
 				}
-				
-				RegistrationResult result = uwService.dropBySln(new ScheduleLineNumber(_sln), new Quarter(_year, season));
+								
+				RegistrationResult result = uwService.dropBySlns(slns, new Quarter(_year, season));
 				
 				if (result.isSuccessful()) {
-					Console.info("Successfully dropped SLN # " + _sln + ".");
+					Console.info("Successfully dropped SLN numbers " + slns + ".");
 					return CommandResult.OK;
 				}
 				else {
-					Console.error("Failed to drop class. Reason: " + result.getFailureReason());
+					Console.error("Failed to drop class(es). Reason: " + result.getFailureReason());
 					return CommandResult.ERROR;
 				}
 				
