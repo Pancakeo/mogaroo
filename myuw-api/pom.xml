@@ -9,7 +9,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.mogaroo.myuw.api</groupId>
 	<artifactId>myuw-api</artifactId>
-	<version>0.1-SNAPSHOT</version>
+	<version>0.2-SNAPSHOT</version>
 	<name>MyUW API</name>
 	<description>An API for interacting with the MyUW web services.</description>
 
