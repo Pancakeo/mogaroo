@@ -17,7 +17,7 @@ A few examples:
  # register -q winter -y 2012 -sln 12345 -sln 67890 -sln 54321
  # getcourses -q winter -y 2012
  # drop -q winter -y 2012 -sln 12345
- # drop -q winter -y 2012 -sln 12345 54321 17791
+ # drop -q winter -y 2012 -sln 12345 -sln 54321 -sln 17791
  # autoregister -q winter -y 2012 -e Astr,211,A,10577 -e Geog,123,A,14056 -e CSE,417,A,12358
 
 Eventually, a GUI might be made.  Just in time for Christmas.
