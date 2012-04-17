@@ -48,6 +48,13 @@ public class MyUWContext extends CLIContext {
 		return _myUwService;
 	}
 	
+	// This fixes a null pointer exceptipn with java-cli-api.
+	@Override
+	protected String getEmbeddedPropertiesFilename() {
+	    //return null;
+	    return "";
+	}
+	
 	@Override
 	protected File getExternalPropertiesFile() {
 		return new File("myuw_cli.properties");
