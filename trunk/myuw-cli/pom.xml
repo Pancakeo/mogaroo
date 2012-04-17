@@ -33,7 +33,7 @@
 					</descriptorRefs>
 					<archive>
 						<manifest>
-							<mainClass>com.ballew.tools.cli.api.EntryPoint</mainClass>
+							<mainClass>net.dharwin.common.tools.cli.api.EntryPoint</mainClass>
 						</manifest>
 					</archive>
 				</configuration>
