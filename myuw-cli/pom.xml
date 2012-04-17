@@ -51,15 +51,16 @@
 	</build>
 
 	<dependencies>
+        <dependency>
+          <groupId>net.dharwin.common.tools.cli</groupId>
+          <artifactId>cli-api</artifactId>
+          <version>1.0</version>
+        </dependency>
+
 		<dependency>
 			<groupId>org.mogaroo.myuw.api</groupId>
 			<artifactId>myuw-api</artifactId>
-			<version>0.1-SNAPSHOT</version>
-		</dependency>
-		<dependency>
-			<groupId>com.ballew.tools.cli</groupId>
-			<artifactId>cli-api</artifactId>
-			<version>0.0.2-SNAPSHOT</version>
+			<version>0.2-SNAPSHOT</version>
 		</dependency>
 
 		<!-- Test Dependencies -->

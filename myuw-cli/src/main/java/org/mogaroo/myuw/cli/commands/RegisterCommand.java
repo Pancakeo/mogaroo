@@ -4,6 +4,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import net.dharwin.common.tools.cli.api.Command;
+import net.dharwin.common.tools.cli.api.CommandResult;
+import net.dharwin.common.tools.cli.api.annotations.CLICommand;
+import net.dharwin.common.tools.cli.api.console.Console;
+
 import org.mogaroo.myuw.api.MyUWService;
 import org.mogaroo.myuw.api.MyUWServiceException;
 import org.mogaroo.myuw.api.Quarter;
@@ -12,10 +17,6 @@ import org.mogaroo.myuw.api.RegistrationResult;
 import org.mogaroo.myuw.api.model.ScheduleLineNumber;
 import org.mogaroo.myuw.cli.MyUWContext;
 
-import com.ballew.tools.cli.api.Command;
-import com.ballew.tools.cli.api.CommandResult;
-import com.ballew.tools.cli.api.annotations.CLICommand;
-import com.ballew.tools.cli.api.console.Console;
 import com.beust.jcommander.Parameter;
 
 @CLICommand(name="register", description="Registers for a class. Login must be called first.")
