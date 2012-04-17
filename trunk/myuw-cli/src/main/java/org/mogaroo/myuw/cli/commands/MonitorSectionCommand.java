@@ -4,6 +4,11 @@ import java.awt.Toolkit;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import net.dharwin.common.tools.cli.api.Command;
+import net.dharwin.common.tools.cli.api.CommandResult;
+import net.dharwin.common.tools.cli.api.annotations.CLICommand;
+import net.dharwin.common.tools.cli.api.console.Console;
+
 import org.mogaroo.myuw.api.MyUWService;
 import org.mogaroo.myuw.api.MyUWServiceException;
 import org.mogaroo.myuw.api.Quarter;
@@ -15,10 +20,6 @@ import org.mogaroo.myuw.api.model.Department;
 import org.mogaroo.myuw.api.model.SectionLabel;
 import org.mogaroo.myuw.cli.MyUWContext;
 
-import com.ballew.tools.cli.api.Command;
-import com.ballew.tools.cli.api.CommandResult;
-import com.ballew.tools.cli.api.annotations.CLICommand;
-import com.ballew.tools.cli.api.console.Console;
 import com.beust.jcommander.Parameter;
 
 @CLICommand(name="monitorsection", description="Monitor a course section's enrollment.")

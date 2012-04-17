@@ -2,16 +2,17 @@ package org.mogaroo.myuw.cli.commands;
 
 import java.util.Set;
 
+import net.dharwin.common.tools.cli.api.Command;
+import net.dharwin.common.tools.cli.api.CommandResult;
+import net.dharwin.common.tools.cli.api.annotations.CLICommand;
+import net.dharwin.common.tools.cli.api.console.Console;
+
 import org.mogaroo.myuw.api.MyUWServiceException;
 import org.mogaroo.myuw.api.Quarter;
 import org.mogaroo.myuw.api.Quarter.Season;
 import org.mogaroo.myuw.api.model.ScheduleLineNumber;
 import org.mogaroo.myuw.cli.MyUWContext;
 
-import com.ballew.tools.cli.api.Command;
-import com.ballew.tools.cli.api.CommandResult;
-import com.ballew.tools.cli.api.annotations.CLICommand;
-import com.ballew.tools.cli.api.console.Console;
 import com.beust.jcommander.Parameter;
 
 @CLICommand(name="getcourses", description="Find out what you're taking!.")

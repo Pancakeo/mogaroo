@@ -1,14 +1,15 @@
 package org.mogaroo.myuw.cli.commands;
 
+import net.dharwin.common.tools.cli.api.Command;
+import net.dharwin.common.tools.cli.api.CommandResult;
+import net.dharwin.common.tools.cli.api.annotations.CLICommand;
+import net.dharwin.common.tools.cli.api.console.Console;
+
 import org.mogaroo.myuw.api.AuthenticationResult;
 import org.mogaroo.myuw.api.MyUWCredentials;
 import org.mogaroo.myuw.api.MyUWServiceException;
 import org.mogaroo.myuw.cli.MyUWContext;
 
-import com.ballew.tools.cli.api.Command;
-import com.ballew.tools.cli.api.CommandResult;
-import com.ballew.tools.cli.api.annotations.CLICommand;
-import com.ballew.tools.cli.api.console.Console;
 import com.beust.jcommander.Parameter;
 
 @CLICommand(name="auth", description="Authorize credentials against the MyUW service.")
