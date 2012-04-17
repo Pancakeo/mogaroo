@@ -45,9 +45,13 @@ public class AutoRegisterCommand extends Command<MyUWContext> {
 	@Parameter(names={"-y", "--year"}, description="The year of the quarter.", required=true)
 	private int _year;
 	
+	@Parameter(names={"--retry_on_error"}, description="Ignore registration errors and retry.", required=false)
+    private boolean _retryOnError;
+	
 	@Override
 	protected CommandResult innerExecute(MyUWContext context) {
-		
+	    int sleepTimeSeconds = context.getInteger("monitor_sleeptime", 120);
+	    
 		if (!context.getMyUWService().isLoggedIn()) {
 			Console.error("User is not logged in.");
 			return CommandResult.ERROR;
@@ -109,11 +113,16 @@ public class AutoRegisterCommand extends Command<MyUWContext> {
 		}
 		catch (MyUWServiceException e) {
 			Console.error("Error communicating with the MyUW service: " + e.getMessage());
-			return CommandResult.ERROR;
+			
+			if (_retryOnError) {
+			    sleepAndRetry(context, sleepTimeSeconds);
+			}
+			else {
+			    return CommandResult.ERROR;
+			}
 		}
 		
 		// Monitor and register.
-		int sleepTimeSeconds = context.getInteger("monitor_sleeptime", 120);
 		RegistrationResult result = autoRegister(sleepTimeSeconds, courses, quarter, context.getMyUWService());
 		
 		if (result.isSuccessful()) {
@@ -121,9 +130,27 @@ public class AutoRegisterCommand extends Command<MyUWContext> {
 			return CommandResult.OK;
 		}
 		else {
-			Console.error("Failed to register. Reason: " + result.getFailureReason());
-			return CommandResult.ERROR;
+		    if (_retryOnError) {
+		        return sleepAndRetry(context, sleepTimeSeconds);
+            }
+		    else {
+		        Console.error("Failed to register. Reason: " + result.getFailureReason());
+		        return CommandResult.ERROR;
+		    }
 		}
+	}
+	
+	private CommandResult sleepAndRetry(MyUWContext context, int sleepTimeSeconds) {
+	    Console.warn("Registration failed. Retry on error enabled. Sleeping for ["+sleepTimeSeconds+"] seconds...");
+        try {
+            Thread.sleep(sleepTimeSeconds*1000);
+            
+        }
+        catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        
+        return innerExecute(context);
 	}
 	
 	private RegistrationResult autoRegister(int sleepTimeSeconds, List<CourseEntry> courses, 
@@ -182,7 +209,7 @@ public class AutoRegisterCommand extends Command<MyUWContext> {
 			for (CourseEntry c : courses) {
 				slns.add(c.getSln());
 			}
-			
+						
 			try {
 				Console.info("Attempting to register for " + slns);
 				return service.registerBySlns(slns, quarter);
@@ -191,6 +218,7 @@ public class AutoRegisterCommand extends Command<MyUWContext> {
 				Console.error("Error in MyUW service: " + e.getMessage());
 				e.printStackTrace();
 			}
+			    			
 		}
 		
 		return RegistrationResult.failure(FailureReason.UNKNOWN);

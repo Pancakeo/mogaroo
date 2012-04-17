@@ -477,7 +477,7 @@ public class MyUWServiceImpl implements MyUWService {
 							throw new HttpException("Final registration page request did not return HTTP 200. "
 									+ "Result code: " + resultCode);
 						}
-						
+												
 						// The 'Display Textbooks' link on the registration page has all the SLN the user is registered for.
 						Node n = XmlUtilities.getNode(doc, "//a[contains(text(), 'Display Textbooks')]");
 						String hrefLink = XmlUtilities.getAttributeFromNode(n, "href");
